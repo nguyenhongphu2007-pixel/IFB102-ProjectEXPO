@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center page-header">
+    <h2 class="mb-0">Image Gallery</h2>
+    {% if usb_connected %}
+        <span class="badge bg-success px-3 py-2"><i class="bi bi-usb-drive"></i> USB Connected</span>
+    {% else %}
+        <span class="badge bg-danger px-3 py-2"><i class="bi bi-usb-drive"></i> USB Disconnected</span>
+    {% endif %}
+</div>
+
+{% if not usb_connected %}
+<div class="alert alert-warning shadow-sm">
+    <h4 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> No USB Drive Detected</h4>
+    <p class="mb-0">Please insert a USB drive into the Raspberry Pi to view and manage images.</p>
+</div>
+{% elif not images %}
+<div class="text-center py-5 bg-white rounded shadow-sm">
+    <i class="bi bi-images text-muted" style="font-size: 4rem;"></i>
+    <h3 class="mt-3 text-muted">No Images Found</h3>
+    <p class="text-muted">Upload some images to start the slideshow.</p>
+    <a href="{{ url_for('upload') }}" class="btn btn-primary mt-2">
+        <i class="bi bi-cloud-upload"></i> Upload Images
+    </a>
+</div>
+{% else %}
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+    {% for image in images %}
+    <div class="col">
+        <div class="card h-100">
+            <img src="{{ url_for('serve_image', filename=image.filename) }}" class="card-img-top img-thumbnail p-2" alt="{{ image.filename }}" loading="lazy">
+            <div class="card-body">
+                <h6 class="card-title text-truncate" title="{{ image.filename }}">{{ image.filename }}</h6>
+                <!-- Date logic can be handled in jinja if needed, passing a string is easier but omitted for simplicity -->
+            </div>
+            <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
+                <button type="button" class="btn btn-sm btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#deleteModal{{ loop.index }}">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div class="modal fade" id="deleteModal{{ loop.index }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ loop.index }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel{{ loop.index }}">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete <strong>{{ image.filename }}</strong>?<br>
+                    This action cannot be undone, and the image will be removed from the slideshow immediately.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form action="{{ url_for('delete_file', filename=image.filename) }}" method="POST">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

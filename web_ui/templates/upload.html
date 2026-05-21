@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="bi bi-cloud-upload text-primary"></i> Upload Images</h2>
+    <p class="text-muted">Supported formats: JPG, PNG, WEBP. Files are saved directly to the USB drive.</p>
+</div>
+
+{% if not usb_connected %}
+<div class="alert alert-warning shadow-sm">
+    <h4 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> No USB Drive Detected</h4>
+    <p class="mb-0">Please insert a USB drive before uploading images.</p>
+</div>
+{% else %}
+<div class="card shadow-sm mb-4">
+    <div class="card-body p-4">
+        <form action="{{ url_for('upload') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
+            <div class="upload-area mb-3" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                <i class="bi bi-cloud-arrow-up text-primary" style="font-size: 3rem;"></i>
+                <h4 class="mt-2">Drag & Drop Images Here</h4>
+                <p class="text-muted mb-0">or click to browse</p>
+            </div>
+            
+            <input type="file" name="files[]" id="fileInput" class="d-none" multiple accept=".jpg,.jpeg,.png,.webp,.bmp,.gif,.tiff" onchange="updateFileList(this)">
+            
+            <div id="fileList" class="mb-3 d-none">
+                <h5>Selected Files:</h5>
+                <ul class="list-group" id="selectedFilesList"></ul>
+            </div>
+            
+            <button type="submit" class="btn btn-primary w-100 py-2 d-none" id="uploadBtn">
+                <i class="bi bi-upload"></i> Upload Now
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const fileListDiv = document.getElementById('fileList');
+    const selectedFilesList = document.getElementById('selectedFilesList');
+
+    if(dropZone) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dropZone.style.background = '#e2efff';
+            dropZone.style.borderColor = '#0a58ca';
+        }
+
+        function unhighlight(e) {
+            dropZone.style.background = '#f1f7ff';
+            dropZone.style.borderColor = '#0d6efd';
+        }
+
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            updateFileList(fileInput);
+        }
+    }
+
+    function updateFileList(input) {
+        if(input.files && input.files.length > 0) {
+            selectedFilesList.innerHTML = '';
+            for(let i=0; i<input.files.length; i++) {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.innerHTML = `<i class="bi bi-file-image"></i> ${input.files[i].name} <span class="text-muted small">(${(input.files[i].size / 1024 / 1024).toFixed(2)} MB)</span>`;
+                selectedFilesList.appendChild(li);
+            }
+            fileListDiv.classList.remove('d-none');
+            uploadBtn.classList.remove('d-none');
+        } else {
+            fileListDiv.classList.add('d-none');
+            uploadBtn.classList.add('d-none');
+        }
+    }
+</script>
+{% endblock %}

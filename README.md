@@ -1,118 +1,94 @@
-# eInkFrame — An eInk Digital Picture Frame Powered by Raspberry Pi and Python
+# E-Ink Slideshow Project
 
-![Screenshot 2025-05-01 201531](https://github.com/user-attachments/assets/5bd552d1-ae64-4cdf-9b72-edce30af698a)
+A production-ready e-ink photo frame application designed for the Raspberry Pi with a Waveshare 7.3-inch display. 
 
-### The **eInkFrame** is a robust digital picture frame powered by Raspberry Pi that utilizes a [Waveshare 7.3 inch 7-Color ePaper Display](https://www.waveshare.com/7.3inch-e-paper-hat-f.htm) for a natural look. Simply upload images in a supported format to a micro SD card, and the display will automatically cycle through them at a customizable interval!
+This project displays a continuous slideshow of images loaded directly from a USB drive and features a built-in web dashboard for easy management.
 
----
+## Features
 
-## Contents
+- **E-Ink Display Optimization:** Automatically resizes, crops, and enhances images for the Waveshare display.
+- **Web Dashboard:** Access a clean, professional web UI from any browser on the local network.
+- **Image Management:** Upload new images (drag & drop) or delete existing ones directly through the dashboard.
+- **Real-time File Synchronization:** Uses filesystem monitoring (`watchdog`) to automatically detect USB changes and update the slideshow without restarting.
+- **USB Auto-Detection:** Automatically locates inserted USB drives without hardcoding mount paths.
+- **Dynamic Settings:** Change the refresh interval via the web dashboard with immediate effect.
 
-- [Required Hardware](#required-hardware)
-- [Pi Setup](#pi-setup)
-- [Assembly](#assembly)
-- [Using the Frame](#using-the-frame)
-- [Video Demo](#video-demo)
+## Project Structure
 
----
-
-## Required Hardware
-
-| Item | Link |
-|------|------|
-| Raspberry Pi Zero 2 W | [Amazon](https://amzn.to/3YBvaBV) |
-| Pi Power Supply | [Amazon](https://amzn.to/42dMak0) |
-| Waveshare 7.3" 7-Color ePaper Display | [Amazon](https://amzn.to/42fzjOk) |
-| Picture Frame 3D Print Files | [Printables](https://www.printables.com/model/1287334-eink-picture-frame) |
-| 2x Micro SD Cards (for OS & images) | [Amazon](https://amzn.to/3EoRUhC) |
-| Micro USB to Micro SD Card Reader | [Option 1](https://amzn.to/4iNaMVC), [Option 2](https://ebay.us/pmuPZh) |
-| Screws/Nuts (if using 3D prints) | 2x M3x20mm screws and nuts |
-
----
-
-## Pi Setup
-
-**Before starting**, ensure that your Pi is running Raspberry Pi OS 32 or 64-bit (Lite not supported), and is connected to your home network.  
-If you need help installing Raspberry Pi OS, follow the [official guide](https://www.raspberrypi.com/documentation/computers/getting-started.html#installing-the-operating-system).
-
-Once your Pi has booted, open Command Prompt (Windows) or Terminal (Mac), and SSH into the Pi:
-
-```bash
-ssh pi@pi.local
+```
+project/
+├── main.py                     # Entry point for the application
+├── web_ui/                     # Flask web application
+│   ├── app.py                  # Web server routes and logic
+│   └── templates/              # HTML interfaces (Bootstrap 5)
+├── slideshow/                  # E-Ink display logic
+│   ├── display_manager.py      # Background thread for e-ink updates
+│   ├── image_converter.py      # Image processing (crop/resize/enhance)
+│   └── usb_monitor.py          # Watchdog and USB detection
+├── config/                     # Configuration files
+│   └── settings.json           # Stores user preferences
+├── requirements.txt            # Python dependencies
+└── setup.sh                    # Automated systemd setup script
 ```
 
-Then run the following to clone the project and begin setup:
+## Hardware Requirements
 
+- Raspberry Pi 4 (or similar) running Raspberry Pi OS (Bookworm).
+- Waveshare 7.3-inch 6-color E-Paper Display.
+- USB Flash Drive (formatted as FAT32 or exFAT).
+
+## Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/nguyenhongphu2007-pixel/IFB102-ProjectEXPO.git
+   cd IFB102-ProjectEXPO
+   ```
+
+2. **Install Python dependencies:**
+   ```bash
+   pip3 install -r requirements.txt
+   ```
+   *(Note: On newer Raspberry Pi OS versions, you may need to use a virtual environment or run `pip3 install --break-system-packages -r requirements.txt` if permitted by your setup.)*
+
+3. **Install the Service (Optional but Recommended):**
+   To make the project run automatically on boot:
+   ```bash
+   chmod +x setup.sh
+   ./setup.sh
+   ```
+   Follow the prompt to reboot the Raspberry Pi.
+
+## Running the Application Manually
+
+To run the application from the terminal:
 ```bash
-git clone https://github.com/EnriqueNeyra/eInkFrame.git
-cd eInkFrame
-sudo bash setup.sh
+python3 main.py
 ```
 
-Be sure to **reboot** the Pi after the setup script completes.
+## USB Setup
 
----
+1. Format a USB drive to FAT32 or exFAT.
+2. Insert the USB drive into the Raspberry Pi.
+3. The application will automatically detect the drive, process any existing images, and begin the slideshow.
 
-## Assembly
+## Dashboard Usage
 
-### 1. Attach the Pi and driver board, ensuring the pin headers are fully inserted.
-<p align="center"><img src="https://github.com/user-attachments/assets/6a8b445e-f5aa-4209-9d59-1f44771c8c97" width="700"></p>
+Once the application is running, open a web browser on any device connected to the same network.
 
-### 2. Insert the Pi and driver board into the enclosure.
-<p align="center"><img src="https://github.com/user-attachments/assets/e239cbd2-ec13-4ce6-b5a3-7ec788c9c889" width="700"></p>
+Navigate to:
+```
+http://raspberrypi.local:5000
+```
+*(Or replace `raspberrypi.local` with the actual IP address of your Raspberry Pi).*
 
-### 3. Insert the M3 nuts into the slots at the bottom of the frame.
-<p align="center"><img src="https://github.com/user-attachments/assets/1424cc05-c8ca-4eee-a023-0ed3894e8e58" width="700"></p>
+From the dashboard, you can:
+- **Gallery:** View all currently uploaded images and delete unwanted ones.
+- **Upload:** Drag and drop new JPG, PNG, or WEBP images directly to the USB drive.
+- **Settings:** Change the slideshow refresh interval.
 
-### 4. Carefully slide the eInk display into the frame, ensuring it's secured under the notch at the top.
-<p align="center"><img src="https://github.com/user-attachments/assets/0aa116d8-0ff4-4fcd-921d-744f1de8a531" width="700"></p>
+## Troubleshooting
 
-### 5. Tuck the ribbon cables into the Pi enclosure and connect to the display cable.
-<p align="center"><img src="https://github.com/user-attachments/assets/1f097542-2afd-4506-b957-2a9bd27435b7" width="700"><br>
-<img src="https://github.com/user-attachments/assets/05a9b906-0a23-47dd-a1ed-2d7c4fdf8e96" width="700"></p>
-
-### 6. Align the enclosure holes with the display, and secure the stand using 2 M3x20mm screws.
-<p align="center"><img src="https://github.com/user-attachments/assets/280c1f53-32ee-486b-861c-43cb786ad754" width="700"></p>
-
-Assembly is now complete!
-
----
-
-## Using the Frame
-
-Upload any images you want displayed to a clean Micro SD card. Recommended and tested formats include: JPG/JPEG, PNG, TIFF, and BMP.
-
-The default image cycle time is 600 seconds (10 minutes), and new images are chosen randomly while avoiding repeats. Optionally, the default timing can be customized by adding a `.txt` file to the SD card that specifies the refresh time **in seconds**:
-
-**Requirements for `refresh_time.txt`:**
-1. Must be named `refresh_time.txt`
-2. Must be placed at the root of the SD card (not in a folder)
-3. The text file should contain **only a single number**
-
-Use the Micro USB to Micro SD card adapter to plug the SD card into the Pi, then connect power.
-After a few moments, a “Beginning Setup...” message will appear. Setup time depends on the number of images on the SD card.
-
-### SD + Power Connections & Setup Screen
-<table>
-<tr>
-<td><img src="https://github.com/user-attachments/assets/1a624bbd-fe04-43ba-9848-4d6f9a4e9256" width="500"></td>
-<td><img src="https://github.com/user-attachments/assets/0caeab3e-0e62-4c46-a58e-45cc1a4e156e" width="500"></td>
-</tr>
-</table>
-
-Your first image should appear shortly!
-
----
-
-## Video Demo
-
-> ⚠️ Note: The video was shortened due to upload size constraints.  
-> Actual setup can take several minutes. Image display/refresh time is ~30 seconds.
-
-<video src="https://github.com/user-attachments/assets/c6cf8acc-d6ac-4012-bf26-b0e4b8fefe73">
-
----
-
-## Questions?
-
-Open an issue or reach out via GitHub!
+- **No Images Displaying:** Ensure your USB drive is inserted and properly mounted by the Raspberry Pi OS. Check the dashboard gallery to verify images were detected.
+- **Service Not Starting:** Check systemd logs using `sudo journalctl -u epaper.service -e`.
+- **Web Dashboard Unreachable:** Ensure you are on the same local network as the Raspberry Pi and that no firewall is blocking port 5000.

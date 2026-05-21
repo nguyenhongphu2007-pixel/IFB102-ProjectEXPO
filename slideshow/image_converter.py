@@ -13,7 +13,7 @@ class ImageConverter:
 
     # Finds valid image files in the source directory to process.
     def process_images(self):
-        valid_extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff')
+        valid_extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.webp')
 
         for img in os.listdir(self.source_dir):
 
@@ -26,7 +26,17 @@ class ImageConverter:
             if os.path.isfile(img_path) and img.lower().endswith(valid_extensions):
                 print(f"Resizing image: {img_path}")
                 self.resize_image(img_path, img)
-            
+
+    def process_single_image(self, file_name):
+        valid_extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.webp')
+        
+        if file_name.startswith('.'):
+            return
+
+        img_path = os.path.join(self.source_dir, file_name)
+        if os.path.isfile(img_path) and file_name.lower().endswith(valid_extensions):
+            print(f"Resizing image: {img_path}")
+            self.resize_image(img_path, file_name)
 
     # Resizes the image to fit the target dimensions while maintaining aspect ratio.
     # Crops the image to the target dimensions and enhances color and contrast.
