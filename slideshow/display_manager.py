@@ -3,7 +3,19 @@ import sys
 import time
 import random
 from PIL import Image
-from lib.waveshare_epd import epd7in3f
+try:
+    from lib.waveshare_epd import epd7in3f
+except (ImportError, OSError) as e:
+    print(f"Warning: Failed to load waveshare_epd library ({e}). Mocking for testing.")
+    class DummyEPD:
+        def init(self):
+            print("Mock EPD: init()")
+        def display(self, buffer):
+            print("Mock EPD: display() called.")
+        def getbuffer(self, pic):
+            return b"dummy_buffer"
+    class epd7in3f:
+        EPD = DummyEPD
 
 SCRIPT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LIB_PATH = os.path.join(SCRIPT_DIR, 'lib')
@@ -54,17 +66,22 @@ class DisplayManager:
 
         if not images:
             print("No images found, displaying default image.")
-            self.display_message('no_valid_images.jpg')
-            return
-
-        random_image = self.select_random_image(images)
-        self.last_selected_image = random_image
-            
-        # Open and display the image
-        with Image.open(os.path.join(self.image_folder, random_image)) as pic:
-            pic = pic.rotate(self.rotation)
-            self.epd.display(self.epd.getbuffer(pic))
-            self.last_display_time = time.time()
+            try:
+                self.display_message('no_valid_images.jpg')
+            except Exception as e:
+                print(f"Could not display no_valid_images.jpg: {e}")
+        else:
+            random_image = self.select_random_image(images)
+            self.last_selected_image = random_image
+                
+            # Open and display the image
+            try:
+                with Image.open(os.path.join(self.image_folder, random_image)) as pic:
+                    pic = pic.rotate(self.rotation)
+                    self.epd.display(self.epd.getbuffer(pic))
+                    self.last_display_time = time.time()
+            except Exception as e:
+                print(f"Error displaying initial image: {e}")
 
         while not self.stop_display:
             current_time = time.time()

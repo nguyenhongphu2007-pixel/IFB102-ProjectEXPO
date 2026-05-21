@@ -36,11 +36,19 @@ def main():
     base_dir, pic_dir, settings_file = setup_environment()
     
     # Find the correct base mount point for USB drives
-    username = os.getenv("SUDO_USER") or os.getenv("USER") or "pi"
-    base_mount_path = f"/media/{username}"
-    if not os.path.exists(base_mount_path):
-        # Fallback for testing environments
-        base_mount_path = "/media/pi"
+    if os.name == 'nt':
+        # Windows environment testing
+        base_mount_path = os.path.join(base_dir, "mock_usb_mount")
+        mock_usb = os.path.join(base_mount_path, "TEST_USB")
+        if not os.path.exists(mock_usb):
+            os.makedirs(mock_usb)
+        print(f"Windows environment detected. Using {mock_usb} as fake USB drive for testing.")
+    else:
+        # Linux / Raspberry Pi environment
+        username = os.getenv("SUDO_USER") or os.getenv("USER") or "pi"
+        base_mount_path = f"/media/{username}"
+        if not os.path.exists(base_mount_path):
+            base_mount_path = "/media/pi"
 
     # Initialize components
     app.config['SETTINGS_FILE'] = settings_file
